@@ -63,7 +63,6 @@ object BenchMain extends Logging {
 
     app match {
       case "pagerank" =>
-        val tol = options.remove("tol").map(_.toFloat).getOrElse(0.001F)
         val outFname = options.remove("output").getOrElse("")
         val numIterOpt = options.remove("numIter").map(_.toInt)
 
@@ -96,6 +95,44 @@ object BenchMain extends Logging {
 
         if (!outFname.isEmpty) {
           logWarning("Saving pageranks of pages to " + outFname)
+          pr.map { case (id, r) => id + "\t" + r }.saveAsTextFile(outFname)
+        }
+
+        sc.stop()
+
+      case "trustrank" =>
+        val outFname = options.remove("output").getOrElse("")
+        val numIterOpt = options.remove("numIter").map(_.toInt)
+
+        options.foreach {
+          case (opt, _) => throw new IllegalArgumentException("Invalid option: " + opt)
+        }
+
+        println("========================================")
+        println("                 TrustRank              ")
+        println("========================================")
+
+        val sc = new SparkContext(conf.setAppName("TrustRank(" + fname + ")"))
+
+        val unpartitionedGraph = GraphLoader.edgeListFile(sc, fname,
+          numEdgePartitions =  numEPart,
+          edgeStorageLevel = edgeStorageLevel,
+          vertexStorageLevel = vertexStorageLevel).cache()
+        val graph = partitionStrategy.foldLeft(unpartitionedGraph)(_.partitionBy(_))
+
+        println("GRAPHX: Number of vertices " + graph.vertices.count)
+        println("GRAPHX: Number of edges " + graph.edges.count)
+
+        val timer = new Timer
+        timer.start()
+        val pr = TrustRank.run(graph, numIter).vertices.cache()
+        timer.stop()
+
+        println("GRAPHX: TrustRank CONF::Iteration " + numIter)
+        println("GRAPHX: TrustRank TIMING::Total " + timer.elapsed())
+
+        if (!outFname.isEmpty) {
+          logWarning("Saving trustranks of pages to " + outFname)
           pr.map { case (id, r) => id + "\t" + r }.saveAsTextFile(outFname)
         }
 
