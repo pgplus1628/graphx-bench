@@ -22,7 +22,11 @@ object BenchMain extends Logging {
   def main(args : Array[String]) : Unit = {
     if (args.length < 3) {
       System.err.println(
-        "Usage : BenchMain <app> <file> --numEPart=<num_edge_partition> --numIter=<num_iterations> [other options]"
+        "Usage : BenchMain <app> <file> " +
+          "--numEPart=<num_edge_partition> " +
+          "--numIter=<num_iterations> " +
+          "--partStrategy=<partitioin strategy> " +
+          " [other options]"
       )
       System.err.println("Supported apps : \n" +
         "PageRank ");

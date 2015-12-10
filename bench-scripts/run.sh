@@ -21,6 +21,8 @@ function hdfs_mkdir {
 }
 
 
+############## GraphX Config
+dft_par="RandomVertexCut"
 
 
 ############## run functions
@@ -41,6 +43,10 @@ function make_opts {
   comm_opts="${comm_opts} --master spark://${spk_master}"
   comm_opts="${comm_opts} --deploy-mode cluster "
   comm_opts="${comm_opts} $JAR ${app} ${data_in} --output=${data_out} --numEPart=8 --numIter=10 "
+
+  # partition strategy
+  comm_opts="${comm_opts} --partStrategy=${dft_par}"
+
   echo "${comm_opts}"
 }
 
