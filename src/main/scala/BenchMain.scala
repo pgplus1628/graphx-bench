@@ -90,8 +90,8 @@ object BenchMain extends Logging {
         val pr = PageRank.run(graph, numIter).vertices.cache()
         timer.stop()
 
-        println("GRAPHX: PageRank CONF::Iteration " + numIter)
-        println("GRAPHX: PageRank TIMING::Total " + timer.elapsed())
+        println("GRAPHX: PageRank CONF::Iteration " + numIter + ".")
+        println("GRAPHX: PageRank TIMING::Total " + timer.elapsed() + " ms.")
 
         if (!outFname.isEmpty) {
           logWarning("Saving pageranks of pages to " + outFname)
@@ -128,8 +128,8 @@ object BenchMain extends Logging {
         val pr = TrustRank.run(graph, numIter).vertices.cache()
         timer.stop()
 
-        println("GRAPHX: TrustRank CONF::Iteration " + numIter)
-        println("GRAPHX: TrustRank TIMING::Total " + timer.elapsed())
+        println("GRAPHX: TrustRank CONF::Iteration " + numIter + ".")
+        println("GRAPHX: TrustRank TIMING::Total " + timer.elapsed() + " ms.")
 
         if (!outFname.isEmpty) {
           logWarning("Saving trustranks of pages to " + outFname)
