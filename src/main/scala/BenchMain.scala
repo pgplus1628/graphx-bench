@@ -91,19 +91,13 @@ object BenchMain extends Logging {
         println("GRAPHX: Number of vertices " + graph.vertices.count)
         println("GRAPHX: Number of edges " + graph.edges.count)
 
-        val timer = new Timer
-        timer.start()
+
         // val pr = PageRank.run(graph, numIter).vertices
-        val pr = PageRankUnCache.run(graph, numIter).vertices
-        timer.stop()
+        val time_ms = PageRankUnCache.run(graph, numIter)
 
         println("GRAPHX: PageRank CONF::Iteration " + numIter + ".")
-        println("GRAPHX: PageRank TIMING::Total " + timer.elapsed() + " ms.")
+        println("GRAPHX: PageRank TIMING::Total " + time_ms + " ms.")
 
-        if (!outFname.isEmpty) {
-          logWarning("Saving pageranks of pages to " + outFname)
-          pr.map { case (id, r) => id + "\t" + r }.saveAsTextFile(outFname)
-        }
 
         sc.stop()
 

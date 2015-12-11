@@ -13,7 +13,7 @@ import scala.reflect.ClassTag
 object PageRankUnCache extends Logging{
 
   def run[VD: ClassTag, ED: ClassTag](graph : Graph[VD, ED], numIter : Int,
-    resetProb : Double = 0.15) : Graph[Double, Double] = {
+    resetProb : Double = 0.15) : Long = {
 
     // initialize pagerankGraph with each edge attribute
     // having weight 1 / outDegree and each vertex with attribute 1.0
@@ -24,6 +24,8 @@ object PageRankUnCache extends Logging{
 
 
     var iteration = 0
+
+    var start_ms = System.currentTimeMillis()
 
     while(iteration < numIter) {
       val rankUpdates = rankGraph.aggregateMessages[Double](
@@ -42,7 +44,8 @@ object PageRankUnCache extends Logging{
       iteration += 1
     }
 
-    rankGraph
+    System.currentTimeMillis() - start_ms
+
   }
 
 
