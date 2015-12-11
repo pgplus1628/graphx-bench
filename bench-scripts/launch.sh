@@ -78,9 +78,12 @@ function launch {
 }
 
 
-####### Launch 
+####### Launch Main
+# options : app graph num_cores_per_exec
+# default number of nodes : 8
 
+launch $1 $2 $3
 
-launch "pagerank" "live/soc-LiveJournal1.txt" 16
+#launch "pagerank" "live/soc-LiveJournal1.txt" 16
 
 
