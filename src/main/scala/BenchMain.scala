@@ -83,8 +83,9 @@ object BenchMain extends Logging {
         val unpartitionedGraph = GraphLoader.edgeListFile(sc, fname,
           numEdgePartitions =  numEPart,
           edgeStorageLevel = edgeStorageLevel,
-          vertexStorageLevel = vertexStorageLevel)
+          vertexStorageLevel = vertexStorageLevel).cache()
         val graph = partitionStrategy.foldLeft(unpartitionedGraph)(_.partitionBy(_))
+        unpartitionedGraph.unpersist()
 
 
         println("GRAPHX: Number of vertices " + graph.vertices.count)
@@ -120,8 +121,9 @@ object BenchMain extends Logging {
         val unpartitionedGraph = GraphLoader.edgeListFile(sc, fname,
           numEdgePartitions =  numEPart,
           edgeStorageLevel = edgeStorageLevel,
-          vertexStorageLevel = vertexStorageLevel)
+          vertexStorageLevel = vertexStorageLevel).cache()
         val graph = partitionStrategy.foldLeft(unpartitionedGraph)(_.partitionBy(_))
+        unpartitionedGraph.unpersist()
 
         println("GRAPHX: Number of vertices " + graph.vertices.count)
         println("GRAPHX: Number of edges " + graph.edges.count)
