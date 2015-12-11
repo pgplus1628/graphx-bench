@@ -93,7 +93,8 @@ object BenchMain extends Logging {
 
         val timer = new Timer
         timer.start()
-        val pr = PageRank.run(graph, numIter).vertices
+        // val pr = PageRank.run(graph, numIter).vertices
+        val pr = PageRankUnCache.run(graph, numIter).vertices
         timer.stop()
 
         println("GRAPHX: PageRank CONF::Iteration " + numIter + ".")
