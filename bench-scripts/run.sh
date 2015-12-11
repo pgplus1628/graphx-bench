@@ -10,7 +10,9 @@ DATA_PATH="hdfs://192.168.1.58:9000${FS_PATH}"
 
 ###############  Spark Config
 spk_master="10.0.0.8:7077"
-
+#spk_master="192.168.1.58:7077"
+num_slaves=8
+dpl_mode="client" # deploy mode
 
 
 ###############  HDFS utils
@@ -29,10 +31,12 @@ dft_par="RandomVertexCut"
 
 
 # make options for spark submit, 
-# options : app graph
+# options : app graph num_cores_per_exec
 function make_opts { 
   app=$1
   graph=$2
+  exec_cores=$3
+  tot_cores=$(($num_slaves*$exec_cores))
 
   data_in=${DATA_PATH}/${graph}
   fs_out="${app}_out/`basename ${graph}`"
@@ -41,7 +45,13 @@ function make_opts {
 
   comm_opts="--class org.zork.graphx.BenchMain"
   comm_opts="${comm_opts} --master spark://${spk_master}"
-  comm_opts="${comm_opts} --deploy-mode cluster "
+  comm_opts="${comm_opts} --deploy-mode ${dpl_mode} "
+  
+  # executor config
+  comm_opts="${comm_opts} --executor-cores ${exec_cores}"
+  comm_opts="${comm_opts} --total-executor-cores ${tot_cores}"
+
+
   comm_opts="${comm_opts} $JAR ${app} ${data_in} --output=${data_out} --numEPart=8 --numIter=10 "
 
   # partition strategy
@@ -53,13 +63,15 @@ function make_opts {
 
 
 # launch application with spark submit
-# options : app graph
+# options : app graph num_cores_per_exec
 function launch { 
   app=$1
   graph=$2
-  opts=$(make_opts $app $graph)
+  exec_cores=$3
+
+  opts=$(make_opts $app $graph $exec_cores)
   echo "++++++++++++++++++++++++++++++++++++++++"
-  echo " launch $app $graph with option : $opts "
+  echo " launch $app $graph $exec_cores with option : $opts "
   echo "----------------------------------------"
 
   ${EXE} $opts
@@ -69,6 +81,6 @@ function launch {
 ####### Launch 
 
 
-launch "pagerank" "live/soc-LiveJournal1.txt"
+launch "pagerank" "live/soc-LiveJournal1.txt" 16
 
 
