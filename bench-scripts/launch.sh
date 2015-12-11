@@ -31,11 +31,12 @@ dft_par="RandomVertexCut"
 
 
 # make options for spark submit, 
-# options : app graph num_cores_per_exec
+# options : app graph num_cores_per_exec d
 function make_opts { 
   app=$1
   graph=$2
   exec_cores=$3
+  d=$4
   tot_cores=$(($num_slaves*$exec_cores))
 
   data_in=${DATA_PATH}/${graph}
@@ -51,12 +52,35 @@ function make_opts {
   comm_opts="${comm_opts} --executor-cores ${exec_cores}"
   comm_opts="${comm_opts} --total-executor-cores ${tot_cores}"
 
-
-  comm_opts="${comm_opts} $JAR ${app} ${data_in} --output=${data_out} --numEPart=8 --numIter=10 "
-
-  # partition strategy
+  # partition 
   comm_opts="${comm_opts} --partStrategy=${dft_par}"
+  comm_opts="${comm_opts} $JAR ${app} ${data_in} --output=${data_out} --numEPart=8"
 
+
+  # app config
+  is_bigraph=0
+  if [ $app == "pagerank" ] ; then
+    is_bigraph=0
+  elif [ $app == "trustrank" ] ; then
+    is_bigraph=0
+  elif [ $app == "als" ] ; then
+    is_bigraph=1
+  elif [ $app == "sgd" ] ; then
+    is_bigraph=1
+  elif [ $app == "svdpp" ] ; then 
+    is_bigraph=1
+  else 
+    echo "unknow app $app"
+    exit 1
+  fi
+
+  if [ $is_bigraph == 0 ] ; then
+    app_opts="${app_opts} --numIter=10"
+  else 
+    app_opts="${app_opts} --numIter=2 --d=$d"
+  fi
+
+  comm_opts="${comm_opts} ${app_opts}"
   echo "${comm_opts}"
 }
 

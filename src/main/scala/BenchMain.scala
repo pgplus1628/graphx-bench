@@ -8,7 +8,7 @@ import java.util
 
 import org.apache.spark.{SparkConf, SparkContext, Logging}
 import org.apache.spark.SparkContext._
-import org.apache.spark.graphx.{GraphLoader, PartitionStrategy, GraphXUtils}
+import org.apache.spark.graphx.{Edge, GraphLoader, PartitionStrategy, GraphXUtils}
 import org.apache.spark.graphx.lib._
 import org.apache.spark.graphx.PartitionStrategy._
 import org.apache.spark.storage.StorageLevel
@@ -18,6 +18,7 @@ import scala.collection.mutable
 import org.zork.graphx.Timer
 
 object BenchMain extends Logging {
+
 
   def main(args : Array[String]) : Unit = {
     if (args.length < 3) {
@@ -64,11 +65,10 @@ object BenchMain extends Logging {
       sys.exit(1)
     }
 
+    val outFname = options.remove("output").getOrElse("")
 
     app match {
       case "pagerank" =>
-        val outFname = options.remove("output").getOrElse("")
-        val numIterOpt = options.remove("numIter").map(_.toInt)
 
         options.foreach {
           case (opt, _) => throw new IllegalArgumentException("Invalid option: " + opt)
@@ -105,8 +105,6 @@ object BenchMain extends Logging {
         sc.stop()
 
       case "trustrank" =>
-        val outFname = options.remove("output").getOrElse("")
-        val numIterOpt = options.remove("numIter").map(_.toInt)
 
         options.foreach {
           case (opt, _) => throw new IllegalArgumentException("Invalid option: " + opt)
@@ -140,6 +138,42 @@ object BenchMain extends Logging {
           pr.map { case (id, r) => id + "\t" + r }.saveAsTextFile(outFname)
         }
 
+        sc.stop()
+
+      case "svdpp" =>
+
+        val d = options.remove("d").map(_.toInt).getOrElse {
+          println("Set the number latent dimention of SVDPP using --d")
+          sys.exit(1)
+        }
+
+        options.foreach {
+          case (opt, _) => throw new IllegalArgumentException("Invalid option: " + opt)
+        }
+
+        println("========================================")
+        println("                 SVDPP                  ")
+        println("========================================")
+
+        val sc = new SparkContext(conf.setAppName("SVDPP(" + fname + ")"))
+
+        val edges = sc.textFile(fname).map { line =>
+          val fields = line.split("\t")
+          Edge(fields(0).toLong * 2, fields(1).toLong *2 +1, fields(2).toDouble)
+        }
+        val svdpp_conf = new SVDPlusPlus.Conf(d , numIter, 0.0, 5.0, 1e-40, 1e-40, 1e-40, 1e-40)
+
+        val timer = new Timer
+        timer.start()
+        val (graph, u) = SVDPlusPlus.run(edges, svdpp_conf)
+        timer.stop()
+
+        println("GRAPHX: Number of vertices " + graph.vertices.count)
+        println("GRAPHX: Number of edges " + graph.edges.count)
+
+        println("GRAPHX: SVDPP CONF::Iteration " + numIter + ".")
+        println("GRAPHX: SVDPP TIMING::Total " + timer.elapsed() + " ms.")
+        println("GraphX: SVDPP RESULT::u " + u)
         sc.stop()
 
 
