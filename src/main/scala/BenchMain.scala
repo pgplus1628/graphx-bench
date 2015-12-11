@@ -83,15 +83,16 @@ object BenchMain extends Logging {
         val unpartitionedGraph = GraphLoader.edgeListFile(sc, fname,
           numEdgePartitions =  numEPart,
           edgeStorageLevel = edgeStorageLevel,
-          vertexStorageLevel = vertexStorageLevel).cache()
+          vertexStorageLevel = vertexStorageLevel)
         val graph = partitionStrategy.foldLeft(unpartitionedGraph)(_.partitionBy(_))
+
 
         println("GRAPHX: Number of vertices " + graph.vertices.count)
         println("GRAPHX: Number of edges " + graph.edges.count)
 
         val timer = new Timer
         timer.start()
-        val pr = PageRank.run(graph, numIter).vertices.cache()
+        val pr = PageRank.run(graph, numIter).vertices
         timer.stop()
 
         println("GRAPHX: PageRank CONF::Iteration " + numIter + ".")
@@ -119,7 +120,7 @@ object BenchMain extends Logging {
         val unpartitionedGraph = GraphLoader.edgeListFile(sc, fname,
           numEdgePartitions =  numEPart,
           edgeStorageLevel = edgeStorageLevel,
-          vertexStorageLevel = vertexStorageLevel).cache()
+          vertexStorageLevel = vertexStorageLevel)
         val graph = partitionStrategy.foldLeft(unpartitionedGraph)(_.partitionBy(_))
 
         println("GRAPHX: Number of vertices " + graph.vertices.count)
@@ -127,7 +128,7 @@ object BenchMain extends Logging {
 
         val timer = new Timer
         timer.start()
-        val pr = TrustRank.run(graph, numIter).vertices.cache()
+        val pr = TrustRank.run(graph, numIter).vertices
         timer.stop()
 
         println("GRAPHX: TrustRank CONF::Iteration " + numIter + ".")
