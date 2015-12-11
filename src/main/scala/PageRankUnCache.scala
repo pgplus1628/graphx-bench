@@ -36,7 +36,7 @@ object PageRankUnCache extends Logging{
 
       rankGraph = rankGraph.joinVertices(rankUpdates) {
         (id, oldRank, msgSum) => resetProb + (1.0 - resetProb) * msgSum
-      }.cache()
+      }
 
       rankGraph.edges.foreachPartition(x=>{}) // materialize rankGraph.vertices
       logInfo(s"PageRank finished iteration $iteration")
