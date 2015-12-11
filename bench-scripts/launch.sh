@@ -39,7 +39,7 @@ function make_opts {
   tot_cores=$(($num_slaves*$exec_cores))
 
   data_in=${DATA_PATH}/${graph}
-  fs_out="${app}_out/`basename ${graph}`"
+  fs_out="${app}_out/`basename ${graph}`-$exec_cores"
   hdfs_mkdir $fs_out
   data_out=${DATA_PATH}/${fs_out}
 
