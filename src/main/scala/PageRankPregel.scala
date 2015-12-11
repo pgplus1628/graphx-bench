@@ -37,11 +37,14 @@ object PageRankPregel extends Logging {
 
     val time_ms = System.currentTimeMillis()
 
-    Pregel(rankGraph, initialMessage, activeDirection = EdgeDirection.Out) (
-      (id : VertexId, attr : Double, msgSum : Double ) => vertexProgram(id, attr, msgSum),
+    Pregel(rankGraph, initialMessage, numIter) (
+      vertexProgram,
       sendMessage,
       messageCombiner)
       .mapVertices((vid, attr) => attr)
+
+    rankGraph.mapVertices( (id,x) => {})
+
 
     System.currentTimeMillis() - time_ms
   }
