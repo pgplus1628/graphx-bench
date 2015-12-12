@@ -24,7 +24,7 @@ object SGD extends Logging{
     extends Serializable
 
   def run(edges : RDD[Edge[Double]], conf: Conf)
-    : (Graph[Array[Double], Double]) =
+    : Long =
   {
 
     // generate default vertex attributes
@@ -64,28 +64,42 @@ object SGD extends Logging{
     }
 
 
-
+    val start_ms = System.currentTimeMillis()
+    println("Start ms : " + start_ms)
 
     for ( i <- 0 until conf.maxIters) {
       g.cache()
 
-      // user update item
-      g.aggregateMessages(
-        sendGrad,
-        (msg1 : Array[Double], msg2 : Array[Double] ) => {
-          val out1 = msg1
-          blas.daxpy(out1.length, 1.0, msg2, 1, out1, 1)
-          (out1)
-        }
+      // gen grad for use and item, message auto combined
+      val updates = g.aggregateMessages(
+          sendGrad,
+          (msg1 : Array[Double], msg2 : Array[Double] ) => {
+            val out = msg1.clone()
+            blas.daxpy(out.length, 1.0, msg2, 1, out, 1)
+            out
+          },
+          TripletFields.All
       )
 
+      val gNew = g.outerJoinVertices(updates) {
+        (vid : VertexId, vd : Array[Double], msg : Option[Array[Double]]) => {
+          val out = vd.clone()
+          blas.daxpy(out.length, 1.0, msg.get, 1, out, 1)
+          out
+        }
+      }
+      gNew.cache()
 
-      // item update user
-
-
+      materialize(gNew)
+      g.unpersist()
+      g = gNew
     }
 
+    val end_ms = System.currentTimeMillis()
+    println("End ms : " + end_ms)
+    println("Cost : " + (end_ms - start_ms))
 
+    end_ms - start_ms
   }
 
 

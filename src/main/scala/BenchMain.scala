@@ -12,6 +12,7 @@ import org.apache.spark.graphx.{Edge, GraphLoader, PartitionStrategy, GraphXUtil
 import org.apache.spark.graphx.lib._
 import org.apache.spark.graphx.PartitionStrategy._
 import org.apache.spark.storage.StorageLevel
+import org.zork.graphx.SGD.Conf
 
 import scala.collection.mutable
 
@@ -30,7 +31,7 @@ object BenchMain extends Logging {
           " [other options]"
       )
       System.err.println("Supported apps : \n" +
-        "PageRank ");
+        "PageRank TrustRank SVDPP SGD ");
       System.exit(1)
     }
 
@@ -173,6 +174,36 @@ object BenchMain extends Logging {
         println("GRAPHX: SVDPP TIMING::Total " + timer.elapsed() + " ms.")
         println("GraphX: SVDPP RESULT::u " + u)
         sc.stop()
+
+      case "sgd" =>
+        val d = options.remove("d").map(_.toInt).getOrElse {
+          println("Set the number latent dimention of SGD using --d")
+          sys.exit(1)
+        }
+
+        options.foreach {
+          case (opt, _) => throw new IllegalArgumentException("Invalid option: " + opt)
+        }
+
+        println("========================================")
+        println("                 SGD                    ")
+        println("========================================")
+
+        val sc = new SparkContext(conf.setAppName("SGD(" + fname + ")"))
+
+        val edges = sc.textFile(fname).map{ line =>
+          val fields = line.split("\t")
+          Edge(fields(0).toLong * 2, fields(1).toLong *2 + 1, fields(2).toDouble)
+        }
+
+        val sgd_conf = new SGD.Conf(d, numIter, 0.0, 5.0, 0.001, 0.001)
+
+        val cost = SGD.run(edges, sgd_conf)
+
+        println("GRAPHX: SGD CONF::Iteration " + numIter + ".")
+        println("GRAPHX: SGD TIMING::Total " + cost + " ms.")
+        sc.stop()
+        
 
 
       case _ =>
