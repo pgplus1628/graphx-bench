@@ -93,7 +93,8 @@ object BenchMain extends Logging {
 
 
         // val pr = PageRank.run(graph, numIter).vertices
-        val time_ms = PageRankPregel.run(graph, numIter)
+        //val time_ms = PageRankPregel.run(graph, numIter)
+        val time_ms = PageRankUnCache.run(graph, numIter)
 
         println("GRAPHX: PageRank CONF::Iteration " + numIter + ".")
         println("GRAPHX: PageRank TIMING::Total " + time_ms + " ms.")

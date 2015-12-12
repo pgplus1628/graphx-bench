@@ -26,6 +26,7 @@ object PageRankUnCache extends Logging{
     var iteration = 0
 
     var start_ms = System.currentTimeMillis()
+    println("Start iteration : " + start_ms)
 
     while(iteration < numIter) {
       val rankUpdates = rankGraph.aggregateMessages[Double](
@@ -38,14 +39,18 @@ object PageRankUnCache extends Logging{
         (id, oldRank, msgSum) => resetProb + (1.0 - resetProb) * msgSum
       }
 
-      rankGraph.edges.foreachPartition(x=>{}) // materialize rankGraph.vertices
+      rankGraph.vertices.count() // materialize rankGraph.vertices
       logInfo(s"PageRank finished iteration $iteration")
 
       iteration += 1
     }
 
-    System.currentTimeMillis() - start_ms
+    var end_ms = System.currentTimeMillis()
+    println("End iteration : " + end_ms)
 
+    println("Cost : " + (end_ms - start_ms))
+
+    end_ms - start_ms
   }
 
 

@@ -9,10 +9,12 @@ DATA_PATH="hdfs://192.168.1.58:9000${FS_PATH}"
 
 
 ###############  Spark Config
-spk_master="10.0.0.8:7077"
-#spk_master="192.168.1.58:7077"
+spk_master="10.0.0.8:6066"
+spk_master_cli="10.0.0.8:7077" # spark master in client mode
+#spk_master="192.168.1.58:6066"
 num_slaves=8
 dpl_mode="client" # deploy mode
+#dpl_mode="cluster"
 
 
 ###############  HDFS utils
@@ -37,15 +39,27 @@ function make_opts {
   graph=$2
   exec_cores=$3
   d=$4
-  tot_cores=$(($num_slaves*$exec_cores))
+  if [ $exec_cores == 16 ] ; then 
+    if [ $dpl_mode == "cluster" ] ; then
+      tot_cores=$(($num_slaves*$exec_cores-1))
+    else 
+      tot_cores=$(($num_slaves*$exec_cores))
+    fi
+  else 
+    tot_cores=$(($num_slaves*$exec_cores))
+  fi
 
   data_in=${DATA_PATH}/${graph}
   fs_out="${app}_out/`basename ${graph}`-$exec_cores"
-  hdfs_mkdir $fs_out
+  #hdfs_mkdir $fs_out
   data_out=${DATA_PATH}/${fs_out}
 
   comm_opts="--class org.zork.graphx.BenchMain"
-  comm_opts="${comm_opts} --master spark://${spk_master}"
+  if [ $dpl_mode == "cluster" ] ; then
+    comm_opts="${comm_opts} --master spark://${spk_master}"
+  else 
+    comm_opts="${comm_opts} --master spark://${spk_master_cli}"
+  fi
   comm_opts="${comm_opts} --deploy-mode ${dpl_mode} "
   
   # executor config
@@ -53,8 +67,8 @@ function make_opts {
   comm_opts="${comm_opts} --total-executor-cores ${tot_cores}"
 
   # partition 
-  comm_opts="${comm_opts} --partStrategy=${dft_par}"
-  comm_opts="${comm_opts} $JAR ${app} ${data_in} --output=${data_out} --numEPart=8"
+  app_opts="${app_opts} $JAR ${app} ${data_in} --output=${data_out} --numEPart=-1"
+  app_opts="${app_opts} --partStrategy=${dft_par}"
 
 
   # app config
@@ -75,7 +89,7 @@ function make_opts {
   fi
 
   if [ $is_bigraph == 0 ] ; then
-    app_opts="${app_opts} --numIter=10"
+    app_opts="${app_opts} --numIter=2"
   else 
     app_opts="${app_opts} --numIter=2 --d=$d"
   fi
