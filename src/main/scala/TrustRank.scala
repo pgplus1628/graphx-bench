@@ -17,18 +17,12 @@ object TrustRank extends Logging {
    * VD : (double, double) denotes rank and score
    * ED : double , not used
    */
-
-  def run[VD: ClassTag, ED:ClassTag] (graph : Graph[VD, ED], numIter : Int) : Graph[Double, Double] =
-  {
-    runWithOption(graph, numIter)
-  }
-
-  def runWithOption[ VD : ClassTag, ED : ClassTag ] (
-    graph: Graph[VD, ED], numIter : Int) : Graph[Double, Double] =
+  def run[ VD : ClassTag, ED : ClassTag ] (
+    graph: Graph[VD, ED], numIter : Int) : Long =
   {
     val resetProb : Double = 0.15
     val resetRank : Double = 0.15
-    val resetScore : Double = Random.nextDouble()
+    def resetScore : Double = Random.nextDouble()
 
 
     // initialize the rank and score with each edge attribute having
@@ -42,13 +36,15 @@ object TrustRank extends Logging {
     .mapVertices( (id, attr) => resetRank)
 
 
-    val scores = graph.vertices.map( v => (v._1, resetScore ) )
+    val scores = graph.vertices.map( v => (v._1, resetScore ) ).cache()
 
     var iteration = 0
 
+    val start_ms = System.currentTimeMillis()
+    println("Start time : " + start_ms)
+
     while(iteration < numIter) {
-      rankGraph.cache()
-      scores.cache()
+      //rankGraph.cache()
 
       // send rank value / outDegree to  dst vertices
       val rankUpdates = rankGraph.aggregateMessages[Double](
@@ -59,13 +55,20 @@ object TrustRank extends Logging {
         (id, oldRank, msgSum) => (1.0 - resetProb) * msgSum
       }.joinVertices(scores) {
         (id, oldRank, score) => oldRank + resetProb * score
-      }.cache()
-
+      }
+      //.cache()
+      rankGraph.vertices.count() // materialize rank graph
       logInfo(s"TrustRank finished iteration $iteration.")
+
       iteration += 1
     }
 
-    rankGraph
+    var end_ms = System.currentTimeMillis()
+    println("End time : " + end_ms)
+
+    println("Cost : " + (end_ms - start_ms))
+
+    end_ms - start_ms
   }
 
 }

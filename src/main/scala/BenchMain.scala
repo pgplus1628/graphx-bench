@@ -125,18 +125,11 @@ object BenchMain extends Logging {
         println("GRAPHX: Number of vertices " + graph.vertices.count)
         println("GRAPHX: Number of edges " + graph.edges.count)
 
-        val timer = new Timer
-        timer.start()
-        val pr = TrustRank.run(graph, numIter).vertices
-        timer.stop()
+
+        val cost = TrustRank.run(graph, numIter)
 
         println("GRAPHX: TrustRank CONF::Iteration " + numIter + ".")
-        println("GRAPHX: TrustRank TIMING::Total " + timer.elapsed() + " ms.")
-
-        if (!outFname.isEmpty) {
-          logWarning("Saving trustranks of pages to " + outFname)
-          pr.map { case (id, r) => id + "\t" + r }.saveAsTextFile(outFname)
-        }
+        println("GRAPHX: TrustRank TIMING::Total " + cost + " ms.")
 
         sc.stop()
 
