@@ -37,6 +37,7 @@ object ALS extends Logging {
     materialize(g)
     edges.unpersist()
 
+    val reg : VertexRDD[Double] = g.outDegrees.map( (vid, vd) =>  )
 
     def sendMsg(edge : EdgeTriplet[Array[Double], Double]) ={
       val f = edge.srcAttr // feature
@@ -50,8 +51,58 @@ object ALS extends Logging {
     }
 
 
-//    def vprog(id : VertexId, attr : Array[Double], msgSum : Array[Double]): Array[Double] = {
-//    }
+    /*
+     * input :
+     * fea : feature vecor
+     * rat : rating
+     * output :
+     * vec : update vector with size d
+     * mat : update matrix with size d * d, in row-major order
+     */
+    def gen_grad(fea : Array[Double], rat : Double) : (Array[Double], Array[Double]) = {
+      val out1 = Array.fill(conf.rank)(0.0) // vec out
+      blas.daxpy(out1.length, rat, fea, 1, out1, 1)
+      val out2 = Array.fill(conf.rank * conf.rank)(0.0) // matrix out
+      blas.dger(conf.rank, conf.rank, 1.0, fea, 1, fea, 1, out2, conf.rank)
+      (out1, out2)
+    }
+
+    def solve(fea : Array[Double], vec : Array[Double], mat : Array[Double]) : Array[Double] = {
+
+    }
+
+
+
+    for ( iter <- 0 until conf.maxIters) {
+      //------- user update item --------------//
+      // gen updates
+      val itm_updates = g.aggregateMessages[(Array[Double], Array[Double])](
+        ctx => ctx.sendToDst(gen_grad(ctx.srcAttr, ctx.attr)),
+        (msg1, msg2) => {
+          val out1 = msg1._1.clone()
+          val out2 = msg1._2.clone()
+          blas.daxpy(out1.length, 1.0, msg2._1, 1, out1, 1)
+          blas.daxpy(out2.length, 1.0, msg2._2, 1, out2, 1)
+          (out1, out2)
+        }
+      )
+      // regulate mat
+      .join(g.outDegrees) {
+        (vid : VertexId, vd : (Array[Double], Array[Double]), deg : Int)
+      }
+
+
+      val gJoinItm = g.outerJoinVertices(itm_updates) {
+        (vid : VertexId, vd : (Array[Double]), msg : (Array[Double], Array[Double])) => {
+
+        }
+      }
+
+      // item update user
+
+    }
+
+
 
     0
   }
