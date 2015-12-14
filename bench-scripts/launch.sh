@@ -101,13 +101,14 @@ function make_opts {
 
 
 # launch application with spark submit
-# options : app graph num_cores_per_exec
+# options : app graph num_cores_per_exec d
 function launch { 
   app=$1
   graph=$2
   exec_cores=$3
+  d=$4
 
-  opts=$(make_opts $app $graph $exec_cores)
+  opts=$(make_opts $app $graph $exec_cores $d)
   echo "++++++++++++++++++++++++++++++++++++++++"
   echo " launch $app $graph $exec_cores with option : $opts "
   echo "----------------------------------------"
@@ -117,10 +118,10 @@ function launch {
 
 
 ####### Launch Main
-# options : app graph num_cores_per_exec
+# options : app graph num_cores_per_exec d
 # default number of nodes : 8
 
-launch $1 $2 $3
+launch $1 $2 $3 $4
 
 #launch "pagerank" "live/soc-LiveJournal1.txt" 16
 
