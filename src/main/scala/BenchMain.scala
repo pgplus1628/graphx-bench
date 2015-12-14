@@ -154,19 +154,12 @@ object BenchMain extends Logging {
           val fields = line.split("\t")
           Edge(fields(0).toLong * 2, fields(1).toLong *2 +1, fields(2).toDouble)
         }
-        val svdpp_conf = new SVDPlusPlus.Conf(d , numIter, 0.0, 5.0, 1e-40, 1e-40, 1e-40, 1e-40)
+        val svdpp_conf = new SVDPPBench.Conf(d , numIter, 0.0, 5.0, 1e-40, 1e-40, 1e-40, 1e-40)
 
-        val timer = new Timer
-        timer.start()
-        val (graph, u) = SVDPlusPlus.run(edges, svdpp_conf)
-        timer.stop()
-
-        println("GRAPHX: Number of vertices " + graph.vertices.count)
-        println("GRAPHX: Number of edges " + graph.edges.count)
+        val cost = SVDPPBench.run(edges, svdpp_conf)
 
         println("GRAPHX: SVDPP CONF::Iteration " + numIter + ".")
-        println("GRAPHX: SVDPP TIMING::Total " + timer.elapsed() + " ms.")
-        println("GraphX: SVDPP RESULT::u " + u)
+        println("GRAPHX: SVDPP TIMING::Total " + cost + " ms.")
         sc.stop()
 
       case "sgd" =>
