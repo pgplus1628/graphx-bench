@@ -190,8 +190,35 @@ object BenchMain extends Logging {
         println("GRAPHX: SGD CONF::Iteration " + numIter + ".")
         println("GRAPHX: SGD TIMING::Total " + cost + " ms.")
         sc.stop()
-        
 
+      case "als" =>
+        val d = options.remove("d").map(_.toInt).getOrElse {
+          println("Set the number latent dimention of ALS using --d")
+          sys.exit(1)
+        }
+
+        options.foreach {
+          case (opt, _) => throw new IllegalArgumentException("Invalid option: " + opt)
+        }
+
+        println("========================================")
+        println("                 ALS                    ")
+        println("========================================")
+
+        val sc = new SparkContext(conf.setAppName("SGD(" + fname + ")"))
+
+        val edges = sc.textFile(fname).map{ line =>
+          val fields = line.split("\t")
+          Edge(fields(0).toLong * 2, fields(1).toLong *2 + 1, fields(2).toDouble)
+        }
+
+        val als_conf = new ALS.Conf(d, numIter, 0.0, 5.0, 0.01)
+
+        val cost = ALS.run(edges, als_conf)
+
+        println("GRAPHX: ALS CONF::Iteration " + numIter + ".")
+        println("GRAPHX: ALS TIMING::Total " + cost + " ms.")
+        sc.stop()
 
       case _ =>
         println("Invalid app.")
