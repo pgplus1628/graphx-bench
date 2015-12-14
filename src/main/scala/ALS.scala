@@ -37,19 +37,7 @@ object ALS extends Logging {
     materialize(g)
     edges.unpersist()
 
-    val reg : VertexRDD[Double] = g.outDegrees.map( (vid, vd) =>  )
-
-    def sendMsg(edge : EdgeTriplet[Array[Double], Double]) ={
-      val f = edge.srcAttr // feature
-      val r = edge.attr    // rating
-      val out1 = Array.fill(conf.rank)(0.0) // feature vec out
-      blas.daxpy(out1.length, r, f, 1, out1, 1)
-      val out2 = Array.fill(conf.rank * conf.rank)(0.0) // mat out
-      // TODO
-
-      //Iterator((edge.dstId, ))
-    }
-
+    //val reg : VertexRDD[Double] = g.outDegrees.map( (vid, vd) =>  )
 
     /*
      * input :
@@ -67,9 +55,9 @@ object ALS extends Logging {
       (out1, out2)
     }
 
-    def solve(fea : Array[Double], vec : Array[Double], mat : Array[Double]) : Array[Double] = {
+//    def solve(fea : Array[Double], vec : Array[Double], mat : Array[Double]) : Array[Double] = {
 
-    }
+//    }
 
 
 
@@ -87,16 +75,16 @@ object ALS extends Logging {
         }
       )
       // regulate mat
-      .join(g.outDegrees) {
-        (vid : VertexId, vd : (Array[Double], Array[Double]), deg : Int)
-      }
+//      .join(g.outDegrees) {
+//        (vid : VertexId, vd : (Array[Double], Array[Double]), deg : Int)
+//      }
 
 
-      val gJoinItm = g.outerJoinVertices(itm_updates) {
-        (vid : VertexId, vd : (Array[Double]), msg : (Array[Double], Array[Double])) => {
+//      val gJoinItm = g.outerJoinVertices(itm_updates) {
+//        (vid : VertexId, vd : (Array[Double]), msg : (Array[Double], Array[Double])) => {
 
-        }
-      }
+//        }
+//      }
 
       // item update user
 

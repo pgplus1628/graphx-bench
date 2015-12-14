@@ -25,43 +25,41 @@ object TrustRank extends Logging {
     def resetScore : Double = Random.nextDouble()
 
 
-    // initialize the rank and score with each edge attribute having
-    // weight 1 / outDegree and each vertex with attribute (1.0, rand)
     var rankGraph : Graph[Double, Double] = graph
-    // associted the degree with each vertex
-    .outerJoinVertices(graph.outDegrees) { (vid, vdata, deg) => deg.getOrElse(0)}
-    // set the weight on the edges based on the degree
-    .mapTriplets( e => 1.0/e.srcAttr, TripletFields.Src)
-    // set the vertex attributes to the initial rank and score values
+    .outerJoinVertices(graph.outDegrees) { (vid, vd, deg) => deg.getOrElse(0)}
+    .mapTriplets(e => 1.0 / e.srcAttr , TripletFields.Src)
     .mapVertices( (id, attr) => resetRank)
 
-
-    val scores = graph.vertices.map( v => (v._1, resetScore ) ).cache()
+    val scoreGraph : Graph[Double, _] = graph
+    .mapVertices( (id, attr) => resetScore)
+    .cache()
 
     var iteration = 0
 
     val start_ms = System.currentTimeMillis()
     println("Start time : " + start_ms)
 
-    while(iteration < numIter) {
-      //rankGraph.cache()
-
-      // send rank value / outDegree to  dst vertices
+    while( iteration < numIter) {
       val rankUpdates = rankGraph.aggregateMessages[Double](
-        ctx => ctx.sendToDst(ctx.srcAttr * ctx.attr), _ + _, TripletFields.Src)
+        ctx => ctx.sendToDst(ctx.srcAttr * ctx.attr),
+        _ + _,
+        TripletFields.Src
+      )
 
-      // update rank
+      // update rank and apply
       rankGraph = rankGraph.joinVertices(rankUpdates) {
-        (id, oldRank, msgSum) => (1.0 - resetProb) * msgSum
-      }.joinVertices(scores) {
-        (id, oldRank, score) => oldRank + resetProb * score
+        (id, old_vd, msgSum) =>  (1.0 - resetProb) * msgSum
+      }.joinVertices(scoreGraph.vertices) {
+        (id, rank, score) => (rank + resetProb * score)
       }
-      //.cache()
+
       rankGraph.vertices.count() // materialize rank graph
       logInfo(s"TrustRank finished iteration $iteration.")
 
       iteration += 1
+
     }
+
 
     var end_ms = System.currentTimeMillis()
     println("End time : " + end_ms)
