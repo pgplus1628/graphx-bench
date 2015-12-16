@@ -205,7 +205,7 @@ object BenchMain extends Logging {
         println("                 ALS                    ")
         println("========================================")
 
-        val sc = new SparkContext(conf.setAppName("SGD(" + fname + ")"))
+        val sc = new SparkContext(conf.setAppName("ALS(" + fname + ")"))
 
         val edges = sc.textFile(fname).map{ line =>
           val fields = line.split("\t")
