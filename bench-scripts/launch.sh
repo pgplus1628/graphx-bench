@@ -29,6 +29,7 @@ function hdfs_mkdir {
 ############## GraphX Config
 dft_par="RandomVertexCut"
 bigraph_par="CanonicalRandomVertexCut"
+NUM_ITER=2000
 
 ############## run functions
 
@@ -92,10 +93,10 @@ function make_opts {
   fi
 
   if [ $is_bigraph == 0 ] ; then
-    app_opts="${app_opts} --numIter=2"
+    app_opts="${app_opts} --numIter=${NUM_ITER}"
     app_opts="${app_opts} --partStrategy=${dft_par}"
   else 
-    app_opts="${app_opts} --numIter=2 --d=$d"
+    app_opts="${app_opts} --numIter=${NUM_ITER} --d=$d"
     app_opts="${app_opts} --partStrategy=${bigraph_par}"
   fi
 
