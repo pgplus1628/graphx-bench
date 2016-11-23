@@ -15,6 +15,7 @@ spk_master_cli="10.0.0.8:7077" # spark master in client mode
 num_slaves=8
 dpl_mode="client" # deploy mode
 #dpl_mode="cluster"
+log4j_conf="./log4j.properties"
 
 
 ###############  HDFS utils
@@ -66,10 +67,12 @@ function make_opts {
   comm_opts="${comm_opts} --executor-cores ${exec_cores}"
   comm_opts="${comm_opts} --total-executor-cores ${tot_cores}"
 
+  # logging
+  #comm_opts="${comm_opts} --files ${log4j_conf}"
+
   # partition 
   app_opts="${app_opts} $JAR ${app} ${data_in} --output=${data_out} --numEPart=-1"
   #app_opts="${app_opts} --partStrategy=${dft_par}"
-
 
   # app config
   is_bigraph=0
