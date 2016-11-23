@@ -34,8 +34,11 @@ object SGD extends Logging{
 
     // construct graph
     edges.cache()
+    var pre_start = System.currentTimeMillis()
     var g = Graph.fromEdges(edges, defaultF(conf.rank)).cache()
     materialize(g)
+    var pre_end = System.currentTimeMillis()
+    println("GraphX : Preprocessing cost : " + (pre_end - pre_start))
     edges.unpersist()
 
     def sendGrad( ctx : EdgeContext[Array[Double],  Double, Array[Double] ]): Unit = {

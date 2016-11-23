@@ -6,16 +6,16 @@ package org.zork.graphx
 
 import java.util
 
-import org.apache.spark.{SparkConf, SparkContext, Logging}
+import akka.actor.FSM.Timer
+import org.apache.spark.{Logging, SparkConf, SparkContext}
 import org.apache.spark.SparkContext._
-import org.apache.spark.graphx.{Edge, GraphLoader, PartitionStrategy, GraphXUtils}
+import org.apache.spark.graphx.{Edge, GraphLoader, GraphXUtils, PartitionStrategy}
 import org.apache.spark.graphx.lib._
 import org.apache.spark.graphx.PartitionStrategy._
 import org.apache.spark.storage.StorageLevel
 import org.zork.graphx.SGD.Conf
 
 import scala.collection.mutable
-
 import org.zork.graphx.Timer
 
 object BenchMain extends Logging {
@@ -85,9 +85,14 @@ object BenchMain extends Logging {
           numEdgePartitions =  numEPart,
           edgeStorageLevel = edgeStorageLevel,
           vertexStorageLevel = vertexStorageLevel).cache()
+        var pre_start = System.currentTimeMillis()
         val graph = partitionStrategy.foldLeft(unpartitionedGraph)(_.partitionBy(_))
+        graph.vertices.count() // materialize
+        var pre_end = System.currentTimeMillis()
+
         unpartitionedGraph.unpersist()
 
+        println("GraphX: Preprocessing cost " + (pre_end - pre_start))
 
         println("GRAPHX: Number of vertices " + graph.vertices.count)
         println("GRAPHX: Number of edges " + graph.edges.count)
@@ -95,8 +100,8 @@ object BenchMain extends Logging {
 
         // val pr = PageRank.run(graph, numIter).vertices
         //val time_ms = PageRankPregel.run(graph, numIter)
-        //val time_ms = PageRankUnCache.run(graph, numIter)
-        val time_ms = PageRankPregelConverge.run(graph, numIter)
+        val time_ms = PageRankUnCache.run(graph, numIter)
+        //val time_ms = PageRankPregelConverge.run(graph, numIter)
 
         println("GRAPHX: PageRank CONF::Iteration " + numIter + ".")
         println("GRAPHX: PageRank TIMING::Total " + time_ms + " ms.")
